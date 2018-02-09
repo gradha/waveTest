@@ -3,9 +3,12 @@ package es.elhaso.gradha.churfthewave.ui;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -38,6 +41,12 @@ public class LoginActivity
     private EditText mPasswordEdit;
     private View mProgressView;
     private View mLoginFormView;
+
+    static public void start(@NonNull Activity parentActivity)
+    {
+        Intent intent = new Intent(parentActivity, LoginActivity.class);
+        parentActivity.startActivity(intent);
+    }
 
     @Override protected void onCreate(Bundle savedInstanceState)
     {

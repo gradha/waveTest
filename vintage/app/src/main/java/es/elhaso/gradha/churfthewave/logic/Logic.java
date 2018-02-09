@@ -1,6 +1,7 @@
 package es.elhaso.gradha.churfthewave.logic;
 
 import android.content.Context;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
@@ -112,5 +113,15 @@ public class Logic
         mPubSub.sendBroadcast(PubSub.LOGIN_EVENT);
 
         return result;
+    }
+
+    /**
+     * Logs out the current user and starts the login activity.
+     */
+    @AnyThread public void logout()
+    {
+        mAuthToken = "";
+        mPrefs.setAuthToken("");
+        mPubSub.sendBroadcast(PubSub.LOGOUT_EVENT);
     }
 }

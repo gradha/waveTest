@@ -11,4 +11,5 @@
     <string name="login_prompt_password">Password</string>
     <string name="users_list_activity_title">UsersListActivity</string>
     <string name="users_list_empty">No users available</string>
+    <string name="users_list_logout">Log out</string>
 </resources>
