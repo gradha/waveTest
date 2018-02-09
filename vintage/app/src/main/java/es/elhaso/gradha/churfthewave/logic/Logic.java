@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import es.elhaso.gradha.churfthewave.misc.PubSub;
+import es.elhaso.gradha.churfthewave.network.Net;
 
 import static es.elhaso.gradha.churfthewave.misc.ThreadUtils.DONT_BLOCK_UI;
 import static junit.framework.Assert.assertFalse;
@@ -85,11 +86,7 @@ public class Logic
         assertFalse(isLoggedIn());
         DONT_BLOCK_UI();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Net.login(user, password);
 
         // Presume success.
         mPubSub.sendBroadcast(PubSub.LOGIN_EVENT);
