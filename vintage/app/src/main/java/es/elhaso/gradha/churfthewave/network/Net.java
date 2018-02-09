@@ -1,6 +1,10 @@
 package es.elhaso.gradha.churfthewave.network;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
@@ -10,9 +14,11 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import es.elhaso.gradha.churfthewave.misc.ThreadUtils;
+
+import static es.elhaso.gradha.churfthewave.misc.ThreadUtils.DONT_BLOCK_UI;
 
 public class Net
 {
@@ -45,7 +53,7 @@ public class Net
         user,
         @NonNull String password)
     {
-        ThreadUtils.DONT_BLOCK_UI();
+        DONT_BLOCK_UI();
 
         final URL url;
         try {
@@ -128,7 +136,7 @@ public class Net
     @WorkerThread public static NetSyncResult<List<JSONUser>> getUsers
         (@NonNull String token)
     {
-        ThreadUtils.DONT_BLOCK_UI();
+        DONT_BLOCK_UI();
 
         final URL url;
         try {
@@ -206,6 +214,94 @@ public class Net
         }
 
         return new NetSyncResult<>(result);
+    }
+
+    public interface OnBitmapLoadedCallback
+    {
+        /**
+         * The callback will always be called in a background thread.
+         *
+         * @param bitmap Null if the bitmap could not be loaded.
+         */
+        @WorkerThread void onBitmapLoaded(@NonNull URL url,
+            @Nullable Bitmap bitmap);
+    }
+
+    /**
+     * Fetches an image at the specified URL.
+     *
+     * TODO: Cancel download.
+     *
+     * @param strongCallback The callback will be called with null or the
+     * bitmap image always in a background thread.
+     */
+    @AnyThread public static void getBitmap(final @NonNull URL url,
+        @NonNull final OnBitmapLoadedCallback strongCallback)
+    {
+        final HttpURLConnection connection;
+        final WeakReference<OnBitmapLoadedCallback> weakCallback = new
+            WeakReference<>(strongCallback);
+
+        final Runnable errorRunnable = new Runnable()
+        {
+            @Override public void run()
+            {
+                DONT_BLOCK_UI();
+                Log.e(TAG, "Error getBitmap for " + url);
+                OnBitmapLoadedCallback callback = weakCallback.get();
+                if (null != callback) {
+                    callback.onBitmapLoaded(url, null);
+                }
+            }
+        };
+
+        try {
+            // https://stackoverflow.com/a/15555952/172690
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-Type", CONTENT_TYPE_FORM);
+            connection.setUseCaches(true);
+            connection.setDoInput(true);
+            connection.setDoOutput(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error setting image download");
+            ThreadUtils.runInBackground(errorRunnable);
+            return;
+        }
+
+        ThreadUtils.runInBackground(new Runnable()
+        {
+            @Override public void run()
+            {
+                try {
+                    readData();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Error setting image download");
+                    errorRunnable.run();
+                }
+            }
+
+            @WorkerThread private void readData() throws IOException
+            {
+                final int responseCode = connection.getResponseCode();
+                Log.d(TAG, "response code " + responseCode);
+
+                if (!isValidResponse(responseCode)) {
+                    errorRunnable.run();
+                    return;
+                }
+
+                InputStream input = connection.getInputStream();
+                final Bitmap bitmap = BitmapFactory.decodeStream(input);
+
+                OnBitmapLoadedCallback callback = weakCallback.get();
+                if (null != callback) {
+                    callback.onBitmapLoaded(url, bitmap);
+                }
+            }
+        });
     }
 
     //region Generic helpers
