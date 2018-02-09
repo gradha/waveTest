@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -32,7 +31,6 @@ import static junit.framework.Assert.assertNotNull;
 public class LoginActivity
     extends AppCompatActivity
 {
-
     private @Nullable UserLoginTask mAuthTask;
 
     // UI references.
@@ -198,7 +196,7 @@ public class LoginActivity
      * the user.
      */
     public class UserLoginTask
-        extends AsyncTask<Void, Void, Boolean>
+        extends AsyncTask<Void, Void, Exception>
     {
 
         private final String mUser;
@@ -211,26 +209,27 @@ public class LoginActivity
             mPassword = password;
         }
 
-        @Override protected Boolean doInBackground(Void... params)
+        @Override protected Exception doInBackground(Void... params)
         {
             final Logic logic = Logic.get();
             assertNotNull(logic);
             assertFalse(logic.isLoggedIn());
 
-            return logic.login(mUser, mPassword);
+            return logic.login(mUser, mPassword).exception;
         }
 
-        @Override protected void onPostExecute(final Boolean success)
+        @Override protected void onPostExecute(final Exception failure)
         {
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
-                finish();
-            } else {
+            // If there is no exception, it was a success.
+            if (null != failure) {
                 mPasswordEdit.setError(getString(R.string
                     .error_incorrect_password));
                 mPasswordEdit.requestFocus();
+            } else {
+                finish();
             }
         }
 

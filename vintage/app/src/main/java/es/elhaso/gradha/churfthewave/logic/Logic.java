@@ -6,11 +6,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import es.elhaso.gradha.churfthewave.misc.PubSub;
 import es.elhaso.gradha.churfthewave.network.Net;
+import es.elhaso.gradha.churfthewave.network.NetSyncResult;
 
 import static es.elhaso.gradha.churfthewave.misc.ThreadUtils.DONT_BLOCK_UI;
 import static junit.framework.Assert.assertFalse;
@@ -80,17 +78,34 @@ public class Logic
         mPubSub = new PubSub(appContext);
     }
 
-    @WorkerThread public boolean login(@NonNull String user,
+    /**
+     * Requests login against the server.
+     *
+     * @return True if the login was a success, an exception otherwise.
+     */
+    @WorkerThread public @NonNull NetSyncResult<String> login(@NonNull String
+        user,
         @NonNull String password)
     {
         assertFalse(isLoggedIn());
         DONT_BLOCK_UI();
 
-        Net.login(user, password);
+        try {
+            Log.d(TAG, "Sleeping");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        final NetSyncResult<String> result = Net.login(user, password);
+        Log.d(TAG, "Server login " + result);
 
-        // Presume success.
+        if (null != result.exception) {
+            return result;
+        }
+
+        mAuthToken = result.value;
         mPubSub.sendBroadcast(PubSub.LOGIN_EVENT);
 
-        return true;
+        return result;
     }
 }
