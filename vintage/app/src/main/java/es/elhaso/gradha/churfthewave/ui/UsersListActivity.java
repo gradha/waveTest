@@ -15,6 +15,7 @@ import android.view.View;
 
 import es.elhaso.gradha.churfthewave.R;
 import es.elhaso.gradha.churfthewave.logic.Logic;
+import es.elhaso.gradha.churfthewave.logic.UserModel;
 import es.elhaso.gradha.churfthewave.logic.UsersRepository;
 
 import static es.elhaso.gradha.churfthewave.misc.PubSub.LOGOUT_EVENT;
@@ -23,6 +24,7 @@ import static junit.framework.Assert.assertNotNull;
 
 public class UsersListActivity
     extends AppCompatActivity
+    implements UsersListRecyclerViewAdapter.OnUserClickedListener
 {
     private static final String TAG = "UsersListActivity";
 
@@ -64,6 +66,7 @@ public class UsersListActivity
 
         UsersRepository.UsersListState usersListState = mLogic
             .getUsersListState();
+        mAdapter.setListener(this);
         mAdapter.load(usersListState.users);
     }
 
@@ -104,6 +107,11 @@ public class UsersListActivity
             mAdapter.load(usersListState.users);
         }
     };
+
+    @Override public void onUserClicked(@NonNull UserModel user)
+    {
+        Log.d(TAG, "User clicked on " + user.firstName);
+    }
 
     //endregion Events
 

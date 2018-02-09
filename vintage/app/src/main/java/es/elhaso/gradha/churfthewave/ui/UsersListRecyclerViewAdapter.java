@@ -1,5 +1,6 @@
 package es.elhaso.gradha.churfthewave.ui;
 
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,9 +24,17 @@ public class UsersListRecyclerViewAdapter
 {
     private List<UserModel> mItems = new ArrayList<>(20);
 
+    private @NonNull WeakReference<OnUserClickedListener> mListener = new
+        WeakReference<OnUserClickedListener>(null);
+
     public UsersListRecyclerViewAdapter()
     {
         setHasStableIds(true);
+    }
+
+    @AnyThread public void setListener(@Nullable OnUserClickedListener listener)
+    {
+        mListener = new WeakReference<OnUserClickedListener>(listener);
     }
 
     @UiThread public void load(@NonNull List<UserModel> items)
@@ -60,8 +70,9 @@ public class UsersListRecyclerViewAdapter
         return mItems.get(position).id;
     }
 
-    static final class RecyclerViewHolder
+    final class RecyclerViewHolder
         extends RecyclerView.ViewHolder
+        implements View.OnClickListener
     {
         private @Nullable UserModel mUser = null;
 
@@ -69,21 +80,35 @@ public class UsersListRecyclerViewAdapter
         private TextView mLastNameText;
         private TextView mGenderText;
 
-        public RecyclerViewHolder(View root)
+        RecyclerViewHolder(View root)
         {
             super(root);
 
             mFirstNameText = root.findViewById(R.id.first_name_text);
             mLastNameText = root.findViewById(R.id.last_name_text);
             mGenderText = root.findViewById(R.id.gender_text);
+            root.setOnClickListener(this);
         }
 
-        @UiThread public void bind(UserModel user)
+        @UiThread void bind(UserModel user)
         {
             mUser = user;
             mFirstNameText.setText(mUser.firstName);
             mLastNameText.setText(mUser.lastName);
             mGenderText.setText(mUser.gender);
         }
+
+        @Override public void onClick(View view)
+        {
+            final OnUserClickedListener listener = mListener.get();
+            if (null != listener && null != mUser) {
+                listener.onUserClicked(mUser);
+            }
+        }
+    }
+
+    interface OnUserClickedListener
+    {
+        void onUserClicked(@NonNull UserModel user);
     }
 }
