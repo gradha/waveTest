@@ -148,5 +148,14 @@ public class Logic
         return mUsersRepository.getCurrent();
     }
 
+    /**
+     * @return The specified user or null if not found. This won't perform
+     * any network fetches.
+     */
+    @AnyThread public @Nullable UserModel getUser(long id)
+    {
+        return mUsersRepository.getUser(id);
+    }
+
     //endregion Users
 }

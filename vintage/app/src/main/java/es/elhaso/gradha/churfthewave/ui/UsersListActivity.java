@@ -111,6 +111,7 @@ public class UsersListActivity
     @Override public void onUserClicked(@NonNull UserModel user)
     {
         Log.d(TAG, "User clicked on " + user.firstName);
+        UserDetailActivity.start(this, user.id);
     }
 
     //endregion Events

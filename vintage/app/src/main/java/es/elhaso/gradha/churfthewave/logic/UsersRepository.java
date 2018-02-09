@@ -2,6 +2,7 @@ package es.elhaso.gradha.churfthewave.logic;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
@@ -64,7 +65,7 @@ public class UsersRepository
 
     //endregion Users List
 
-    @AnyThread public void clear()
+    @AnyThread void clear()
     {
         synchronized (mLock) {
             mItems.clear();
@@ -94,7 +95,7 @@ public class UsersRepository
      * method returns true, you should be waiting for a future notification
      * update.
      */
-    @AnyThread public boolean fetchItems(final @NonNull String token)
+    @AnyThread boolean fetchItems(final @NonNull String token)
     {
         synchronized (mLock) {
             switch (mState) {
@@ -118,6 +119,25 @@ public class UsersRepository
                     return false;
             }
         }
+    }
+
+    /**
+     * Finds the specified user model in the repository.
+     *
+     * This won't fetch any real data, you need to call
+     * {@link #fetchItems(String)} for that.
+     */
+    @AnyThread @Nullable UserModel getUser(long id)
+    {
+        synchronized (mLock) {
+            for (UserModel user : mItems) {
+                if (user.id == id) {
+                    return user;
+                }
+            }
+        }
+
+        return null;
     }
 
     @WorkerThread private void loadFromServer(@NonNull String token)

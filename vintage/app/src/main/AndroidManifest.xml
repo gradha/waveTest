@@ -27,6 +27,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="es.elhaso.gradha.churfthewave.ui.LoginActivity"/>
         </activity>
+
+        <activity
+            android:name=".ui.UserDetailActivity"
+            android:label="@string/user_detail_activity_title"
+            android:parentActivityName=".ui.UsersListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="es.elhaso.gradha.churfthewave.ui.UsersListActivity"/>
+        </activity>
     </application>
 
 </manifest>

@@ -27,7 +27,7 @@
         android:layout_alignTop="@+id/avatar_view"
         android:layout_toRightOf="@+id/avatar_view"
         android:maxLines="1"
-        android:text="First Name"
+        tools:text="First Name"
         />
 
     <TextView
@@ -37,7 +37,7 @@
         android:layout_below="@+id/first_name_text"
         android:layout_toRightOf="@+id/avatar_view"
         android:maxLines="1"
-        android:text="Very long last Last Name"
+        tools:text="Very long last Last Name"
         />
 
     <TextView
@@ -47,7 +47,7 @@
         android:layout_below="@+id/last_name_text"
         android:layout_toRightOf="@+id/avatar_view"
         android:maxLines="1"
-        android:text="Some gender"
+        tools:text="Some gender"
         />
 
 </RelativeLayout>

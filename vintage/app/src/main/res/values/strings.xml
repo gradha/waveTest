@@ -9,7 +9,8 @@
     <string name="login_error_invalid_username">This user name is invalid</string>
     <string name="login_prompt_email">Email</string>
     <string name="login_prompt_password">Password</string>
-    <string name="users_list_activity_title">UsersListActivity</string>
+    <string name="users_list_activity_title">List of users</string>
     <string name="users_list_empty">No users available</string>
     <string name="users_list_logout">Log out</string>
+    <string name="user_detail_activity_title">User detail</string>
 </resources>
