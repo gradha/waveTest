@@ -232,15 +232,13 @@ public class Net
      *
      * TODO: Cancel download.
      *
-     * @param strongCallback The callback will be called with null or the
+     * @param callback The callback will be called with null or the
      * bitmap image always in a background thread.
      */
     @AnyThread public static void getBitmap(final @NonNull URL url,
-        @NonNull final OnBitmapLoadedCallback strongCallback)
+        @NonNull final OnBitmapLoadedCallback callback)
     {
         final HttpURLConnection connection;
-        final WeakReference<OnBitmapLoadedCallback> weakCallback = new
-            WeakReference<>(strongCallback);
 
         final Runnable errorRunnable = new Runnable()
         {
@@ -248,10 +246,7 @@ public class Net
             {
                 DONT_BLOCK_UI();
                 Log.e(TAG, "Error getBitmap for " + url);
-                OnBitmapLoadedCallback callback = weakCallback.get();
-                if (null != callback) {
-                    callback.onBitmapLoaded(url, null);
-                }
+                callback.onBitmapLoaded(url, null);
             }
         };
 
@@ -296,10 +291,7 @@ public class Net
                 InputStream input = connection.getInputStream();
                 final Bitmap bitmap = BitmapFactory.decodeStream(input);
 
-                OnBitmapLoadedCallback callback = weakCallback.get();
-                if (null != callback) {
-                    callback.onBitmapLoaded(url, bitmap);
-                }
+                callback.onBitmapLoaded(url, bitmap);
             }
         });
     }

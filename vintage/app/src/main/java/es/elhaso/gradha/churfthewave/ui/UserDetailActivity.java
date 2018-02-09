@@ -82,7 +82,7 @@ public class UserDetailActivity
         mGenderText.setText(null != user ? user.gender : "");
 
         if (null != user && null != user.bigAvatarUrl) {
-            Net.getBitmap(user.bigAvatarUrl, this);
+            mLogic.getBitmap(user.bigAvatarUrl, this);
         }
     }
 

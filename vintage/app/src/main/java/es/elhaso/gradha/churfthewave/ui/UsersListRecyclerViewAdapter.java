@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import es.elhaso.gradha.churfthewave.R;
+import es.elhaso.gradha.churfthewave.logic.Logic;
 import es.elhaso.gradha.churfthewave.logic.UserModel;
 import es.elhaso.gradha.churfthewave.misc.ThreadUtils;
 import es.elhaso.gradha.churfthewave.network.Net;
@@ -28,11 +29,13 @@ public class UsersListRecyclerViewAdapter
 {
     private List<UserModel> mItems = new ArrayList<>(20);
 
+    private final @NonNull Logic mLogic;
     private @NonNull WeakReference<OnUserClickedListener> mListener = new
         WeakReference<>(null);
 
-    public UsersListRecyclerViewAdapter()
+    public UsersListRecyclerViewAdapter(@NonNull Logic logic)
     {
+        mLogic = logic;
         setHasStableIds(true);
     }
 
@@ -104,7 +107,7 @@ public class UsersListRecyclerViewAdapter
             mGenderText.setText(mUser.gender);
             mAvatarImage.setImageBitmap(null);
             if (null != mUser.smallAvatarUrl) {
-                Net.getBitmap(mUser.smallAvatarUrl, this);
+                mLogic.getBitmap(mUser.smallAvatarUrl, this);
             }
         }
 

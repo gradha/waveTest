@@ -1,15 +1,21 @@
 package es.elhaso.gradha.churfthewave.logic;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import es.elhaso.gradha.churfthewave.disk.ChurfPreferences;
 import es.elhaso.gradha.churfthewave.logic.UsersRepository.UsersListState;
 import es.elhaso.gradha.churfthewave.misc.PubSub;
+import es.elhaso.gradha.churfthewave.misc.ThreadUtils;
 import es.elhaso.gradha.churfthewave.network.Net;
 import es.elhaso.gradha.churfthewave.network.NetSyncResult;
 
@@ -30,6 +36,7 @@ public class Logic
     final private @NonNull PubSub mPubSub;
     final private @NonNull ChurfPreferences mPrefs;
     final private @NonNull UsersRepository mUsersRepository;
+    final private @NonNull ImageCache mImageCache;
 
     private @NonNull String mAuthToken;
 
@@ -83,6 +90,7 @@ public class Logic
         mPrefs = new ChurfPreferences(appContext);
         mAuthToken = mPrefs.getAuthToken();
         mUsersRepository = new UsersRepository(mPubSub);
+        mImageCache = new ImageCache();
     }
 
     //region Login
@@ -128,6 +136,7 @@ public class Logic
         mAuthToken = "";
         mPrefs.setAuthToken("");
         mUsersRepository.clear();
+        mImageCache.clear();
         mPubSub.sendBroadcast(PubSub.LOGOUT_EVENT);
     }
 
@@ -158,4 +167,58 @@ public class Logic
     }
 
     //endregion Users
+
+    //region Image cache wrapper
+
+    /**
+     * Fetches an image at the specified URL.
+     *
+     * Unlike the raw method from the {@link Net} class, this will cache the
+     * bitmaps and thus the answer should happen quicker.
+     *
+     * @param strongCallback The callback will be called with null or the
+     * bitmap image always in a background thread.
+     */
+    @AnyThread public void getBitmap(final @NonNull URL url,
+        @NonNull final Net.OnBitmapLoadedCallback strongCallback)
+    {
+        final WeakReference<Net.OnBitmapLoadedCallback> weakCallback = new
+            WeakReference<>(strongCallback);
+        final Bitmap cachedBitmap = mImageCache.get(url);
+        if (null != cachedBitmap) {
+            Log.d(TAG, "Found image for " + url);
+            ThreadUtils.runInBackground(new Runnable()
+            {
+                @Override public void run()
+                {
+                    Net.OnBitmapLoadedCallback callback = weakCallback.get();
+                    if (null != callback) {
+                        callback.onBitmapLoaded(url, cachedBitmap);
+                    }
+                }
+            });
+            return;
+        }
+
+        Log.d(TAG, "Failed cache for " + url);
+        // Wrap the callback to cache the results for future queries.
+        Net.getBitmap(url, new Net.OnBitmapLoadedCallback()
+        {
+            @Override public void onBitmapLoaded(final @NonNull URL url,
+                final @Nullable Bitmap bitmap)
+            {
+                if (null != bitmap) {
+                    Log.d(TAG, "Saving cache for " + url);
+                    mImageCache.put(url, bitmap);
+                }
+
+                Net.OnBitmapLoadedCallback callback = weakCallback.get();
+                if (null != callback) {
+                    callback.onBitmapLoaded(url, bitmap);
+                }
+            }
+        });
+    }
+
+    //endregion Image cache wrapper
 }

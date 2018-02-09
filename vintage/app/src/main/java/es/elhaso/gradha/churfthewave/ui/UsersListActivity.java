@@ -56,7 +56,7 @@ public class UsersListActivity
         mLogic.getPubSub().registerReceiver(mUsersUpdatedEvent,
             USERS_LIST_UPDATED);
 
-        mAdapter = new UsersListRecyclerViewAdapter();
+        mAdapter = new UsersListRecyclerViewAdapter(mLogic);
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setAdapter(mAdapter);
 
