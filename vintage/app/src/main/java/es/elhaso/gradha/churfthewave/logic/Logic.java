@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
+import es.elhaso.gradha.churfthewave.disk.ChurfPreferences;
 import es.elhaso.gradha.churfthewave.misc.PubSub;
 import es.elhaso.gradha.churfthewave.network.Net;
 import es.elhaso.gradha.churfthewave.network.NetSyncResult;
@@ -24,14 +25,16 @@ public class Logic
     private static @Nullable Logic gSharedInstance = null;
     private static final Object gLock = new Object[0];
 
-    private @Nullable String mAuthToken;
-    private @NonNull PubSub mPubSub;
+    final private @NonNull PubSub mPubSub;
+    final private @NonNull ChurfPreferences mPrefs;
+
+    private @NonNull String mAuthToken;
 
     //region Setters and getters
 
-    public @Nullable boolean isLoggedIn()
+    public boolean isLoggedIn()
     {
-        return null != mAuthToken;
+        return mAuthToken.length() > 0;
     }
 
     public @NonNull PubSub getPubSub()
@@ -46,16 +49,14 @@ public class Logic
      */
     public static @NonNull Logic get(@NonNull Context context)
     {
-        final Logic result;
         synchronized (gLock) {
             if (null == gSharedInstance) {
                 gSharedInstance = new Logic(context.getApplicationContext());
             }
             assertNotNull(gSharedInstance);
-            result = gSharedInstance;
-        }
 
-        return gSharedInstance;
+            return gSharedInstance;
+        }
     }
 
     /**
@@ -72,10 +73,12 @@ public class Logic
 
     //endregion Setters and getters
 
-    public Logic(@NonNull Context appContext)
+    private Logic(@NonNull Context appContext)
     {
         Log.d(TAG, "Building Logic singleton");
         mPubSub = new PubSub(appContext);
+        mPrefs = new ChurfPreferences(appContext);
+        mAuthToken = mPrefs.getAuthToken();
     }
 
     /**
@@ -91,7 +94,7 @@ public class Logic
         DONT_BLOCK_UI();
 
         try {
-            Log.d(TAG, "Sleeping");
+            Log.d(TAG, "Sleeping… to add dramatism");
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -103,7 +106,9 @@ public class Logic
             return result;
         }
 
+        assertNotNull(result.value);
         mAuthToken = result.value;
+        mPrefs.setAuthToken(mAuthToken);
         mPubSub.sendBroadcast(PubSub.LOGIN_EVENT);
 
         return result;

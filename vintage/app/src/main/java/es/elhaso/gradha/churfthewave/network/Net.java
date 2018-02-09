@@ -34,7 +34,7 @@ public class Net
     /**
      * Requests an authentication token from the server for the given params.
      *
-     * @return The authentication token or any kind of exception.
+     * @return The non null authentication token or any kind of exception.
      */
     @WorkerThread public static NetSyncResult<String> login(@NonNull String
         user,

@@ -44,6 +44,12 @@ public class LoginActivity
         super.onCreate(savedInstanceState);
         final Logic logic = Logic.get(this);
 
+        if (logic.isLoggedIn()) {
+            UsersListActivity.start(LoginActivity.this);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mUserEdit = findViewById(R.id.email);
@@ -110,18 +116,20 @@ public class LoginActivity
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordEdit.setError(getString(R.string.error_invalid_password));
+            mPasswordEdit.setError(getString(R.string
+                .login_error_invalid_password));
             focusView = mPasswordEdit;
             cancel = true;
         }
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(user)) {
-            mUserEdit.setError(getString(R.string.error_field_required));
+            mUserEdit.setError(getString(R.string.login_error_field_required));
             focusView = mUserEdit;
             cancel = true;
         } else if (!isUserValid(user)) {
-            mUserEdit.setError(getString(R.string.error_invalid_username));
+            mUserEdit.setError(getString(R.string
+                .login_error_invalid_username));
             focusView = mUserEdit;
             cancel = true;
         }
@@ -226,9 +234,10 @@ public class LoginActivity
             // If there is no exception, it was a success.
             if (null != failure) {
                 mPasswordEdit.setError(getString(R.string
-                    .error_incorrect_password));
+                    .login_error_incorrect_password));
                 mPasswordEdit.requestFocus();
             } else {
+                UsersListActivity.start(LoginActivity.this);
                 finish();
             }
         }
