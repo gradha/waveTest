@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,7 +17,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import es.elhaso.gradha.churfthewave.misc.ThreadUtils;
@@ -24,12 +27,14 @@ import es.elhaso.gradha.churfthewave.misc.ThreadUtils;
 public class Net
 {
     private static final String TAG = "Net";
+    private static final String AUTHORIZATION_HEADER = "authorization";
     private static final String CONTENT_TYPE_FORM =
         "application/x-www-form-urlencoded";
 
     private static final String BASE_URL = "http://wave-recruit-test" + "" +
         ".herokuapp.com";
     private static final String LOGIN_URL = BASE_URL + "/login";
+    private static final String USERS_URL = BASE_URL + "/getUsers";
 
     /**
      * Requests an authentication token from the server for the given params.
@@ -120,6 +125,91 @@ public class Net
         }
     }
 
+    @WorkerThread public static NetSyncResult<List<JSONUser>> getUsers
+        (@NonNull String token)
+    {
+        ThreadUtils.DONT_BLOCK_UI();
+
+        final URL url;
+        try {
+            url = new URL(USERS_URL);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+            return new NetSyncResult<>(e);
+        }
+
+        final HttpURLConnection connection;
+        final String body;
+        final int responseCode;
+
+        try {
+            // https://stackoverflow.com/a/15555952/172690
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-Type", CONTENT_TYPE_FORM);
+            connection.setRequestProperty(AUTHORIZATION_HEADER, token);
+
+            connection.setUseCaches(false);
+            connection.setDoInput(true);
+            connection.setDoOutput(false);
+
+            responseCode = connection.getResponseCode();
+            Log.d(TAG, "response code " + responseCode);
+
+            InputStream inputStream = (isValidResponse(responseCode) ?
+                connection.getInputStream() : connection.getErrorStream());
+            body = getBodyAsString(inputStream);
+            inputStream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Failed hard " + e.getMessage());
+
+            return new NetSyncResult<>(e);
+        }
+
+        final JSONArray json;
+        try {
+            json = new JSONArray(body);
+            Log.d(TAG, "Got " + json.length() + " users");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Couldn't convert body to JSON: " + body);
+            return new NetSyncResult<>(e);
+        }
+
+        if (!isValidResponse(responseCode)) {
+            final String message = "Server response out of range " +
+                responseCode;
+            Log.e(TAG, message);
+            // TODO: Attempt to extract error for user ui.
+
+            return new NetSyncResult<>(new Exception(message));
+        }
+
+        List<JSONUser> result = new ArrayList<>(json.length());
+        for (int f = 0; f < json.length(); f++) {
+            JSONObject userJson = json.optJSONObject(f);
+            if (null == userJson) {
+                return new NetSyncResult<>(new Exception("Error parsing " +
+                    "users"));
+            }
+
+            JSONUser user = JSONUser.from(userJson);
+            if (null == user) {
+                return new NetSyncResult<>(new Exception("Error parsing " +
+                    "users"));
+            }
+
+            result.add(user);
+        }
+
+        return new NetSyncResult<>(result);
+    }
+
+    //region Generic helpers
+
     static private boolean isValidResponse(int code)
     {
         return (code >= 200 && code < 300);
@@ -162,4 +252,6 @@ public class Net
         return result.toString("UTF-8");
 
     }
+
+    //endregion Generic helpers
 }

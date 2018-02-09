@@ -46,6 +46,8 @@ public class UsersListActivity
 
         mLogic.getPubSub().registerReceiver(mMessageReceiver, PubSub
             .LOGOUT_EVENT);
+
+        Log.d(TAG, "got " + mLogic.getUsersListState());
     }
 
     @Override protected void onDestroy()

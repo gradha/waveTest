@@ -29,7 +29,10 @@ public class PubSub
     // the server decides our auth token has expired.
     public static final String LOGOUT_EVENT = "LogoutEvent";
 
-    @Retention(SOURCE) @StringDef({LOGIN_EVENT, LOGOUT_EVENT,})
+    public static final String USERS_LIST_UPDATED = "UsersListUpdated";
+
+    @Retention(SOURCE) @StringDef({LOGIN_EVENT, LOGOUT_EVENT,
+        USERS_LIST_UPDATED})
 
     public @interface Event {}
 

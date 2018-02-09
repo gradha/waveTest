@@ -8,6 +8,7 @@ import android.support.annotation.WorkerThread;
 import android.util.Log;
 
 import es.elhaso.gradha.churfthewave.disk.ChurfPreferences;
+import es.elhaso.gradha.churfthewave.logic.UsersRepository.UsersListState;
 import es.elhaso.gradha.churfthewave.misc.PubSub;
 import es.elhaso.gradha.churfthewave.network.Net;
 import es.elhaso.gradha.churfthewave.network.NetSyncResult;
@@ -28,6 +29,7 @@ public class Logic
 
     final private @NonNull PubSub mPubSub;
     final private @NonNull ChurfPreferences mPrefs;
+    final private @NonNull UsersRepository mUsersRepository;
 
     private @NonNull String mAuthToken;
 
@@ -80,7 +82,10 @@ public class Logic
         mPubSub = new PubSub(appContext);
         mPrefs = new ChurfPreferences(appContext);
         mAuthToken = mPrefs.getAuthToken();
+        mUsersRepository = new UsersRepository(mPubSub);
     }
+
+    //region Login
 
     /**
      * Requests login against the server.
@@ -122,6 +127,26 @@ public class Logic
     {
         mAuthToken = "";
         mPrefs.setAuthToken("");
+        mUsersRepository.clear();
         mPubSub.sendBroadcast(PubSub.LOGOUT_EVENT);
     }
+
+    //endregion Login
+
+    //region Users
+
+    /**
+     * @return The current list of users along with the fetch state.
+     * If the current state requires fetching more items, this will happen
+     * automatically.
+     */
+    @AnyThread public @NonNull UsersListState getUsersListState()
+    {
+        if (mAuthToken.length() > 0) {
+            mUsersRepository.fetchItems(mAuthToken);
+        }
+        return mUsersRepository.getCurrent();
+    }
+
+    //endregion Users
 }
